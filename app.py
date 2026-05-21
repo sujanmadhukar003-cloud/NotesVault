@@ -6,6 +6,8 @@ from datetime import timedelta
 import uuid
 from flask import send_file
 
+from dotenv import load_dotenv
+load_dotenv()
 
 
 app = Flask(__name__)
@@ -355,6 +357,10 @@ def load_resource(semester, subject, unit, rtype):
         header_title = "Unit 1 and 2- Slides"
     elif subject == "Cyber Security" and unit == "Unit 3" and rtype == "ppt":
         header_title = "Unit 3 and 4- Slides"
+    elif subject == "Machine Learning" and unit == "Unit 3" and rtype == "qb":
+        header_title = "It has both Unit 3 and 4- QB"
+    elif subject == "Machine Learning" and unit == "Unit 4" and rtype == "qb":
+        header_title = "It has both Unit 3 and 4- QB"
     else:
         header_title = f"{unit} - {rtype.upper()}"
 
