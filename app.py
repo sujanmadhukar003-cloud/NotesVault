@@ -6,6 +6,7 @@ from datetime import timedelta
 import uuid
 from flask import send_file
 
+
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 IMAGE_FOLDER = os.path.join("static", "images")
@@ -858,6 +859,42 @@ def admin_feedback():
         feedbacks=feedbacks
     )
 
+# from flask import request, jsonify
+# from rag.chat import chat
+
+
+# @app.route("/chat", methods=["POST"])
+# def ai_chat():
+
+#     try:
+
+#         data = request.get_json()
+
+#         print("\nREQUEST DATA:")
+#         print(data)
+
+#         user_message = data.get("message")
+
+#         print("\nUSER MESSAGE:")
+#         print(user_message)
+
+#         answer = chat(user_message)
+
+#         print("\nAI ANSWER:")
+#         print(answer)
+
+#         return jsonify({
+#             "answer": answer
+#         })
+
+#     except Exception as e:
+
+#         print("\nCHAT ERROR:")
+#         print(str(e))
+
+#         return jsonify({
+#             "answer": f"Server Error: {str(e)}"
+#         })
 
 if __name__ == "__main__":
     app.run()

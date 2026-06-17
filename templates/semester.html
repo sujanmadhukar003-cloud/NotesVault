@@ -91,6 +91,15 @@
             {% endfor %}
         </div>
     </main>
+        <!-- <button id="chat-toggle">💬</button>
+    <div id="chatbot-container">
+        <div id="chat-header">NotesVault AI</div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask from your notes...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div> -->
 
     <!-- <footer class="mt-20 py-8 border-t border-slate-800 text-center">
         <p class="text-slate-500 text-xs">Empowering Semester 4 Students at Soulful Arts Portal</p>
@@ -103,5 +112,63 @@
             document.getElementById(id).style.display = "block";
         }
     </script>
+    <!-- <script>
+    document.addEventListener("DOMContentLoaded", function(){
+            const toggleBtn = document.getElementById("chat-toggle");
+            const chatbot = document.getElementById("chatbot-container");
+            const sendBtn = document.getElementById("send-btn");
+            const chatInput = document.getElementById("chat-input");
+            const chatMessages = document.getElementById("chat-messages");
+
+            toggleBtn.onclick = function(){
+                chatbot.style.display = (chatbot.style.display === "flex") ? "none" : "flex";
+            };
+
+            function addMessage(text, className){
+                const div = document.createElement("div");
+                div.className = "message " + className;
+                div.innerText = text;
+                chatMessages.appendChild(div);
+                
+                setTimeout(() => {
+                    chatMessages.scrollTo({
+                        top: chatMessages.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 60);
+
+                return div;
+            }
+
+            async function sendMessage(){
+                const message = chatInput.value.trim();
+                if (message === "") return;
+
+                addMessage(message, "user-message");
+                chatInput.value = "";
+                const loading = addMessage("Thinking...", "ai-message loading");
+
+                try {
+                    const response = await fetch("/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: message })
+                    });
+                    const data = await response.json();
+                    loading.remove();
+                    addMessage(data.answer || "No response", "ai-message");
+                } catch(error) {
+                    console.error(error);
+                    loading.remove();
+                    addMessage("Server error", "ai-message");
+                }
+            }
+
+            sendBtn.onclick = sendMessage;
+            chatInput.addEventListener("keydown", function(e){
+                if (e.key === "Enter") sendMessage();
+            });
+        });
+    </script> -->
 </body>
 </html>
