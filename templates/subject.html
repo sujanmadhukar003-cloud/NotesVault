@@ -451,5 +451,70 @@
             }
         }
     </script>
+
+<!-- FEEDBACK SURVEY MODAL -->
+<div id="surveyModal"
+     class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[99999]">
+
+    <div class="relative bg-slate-900 rounded-2xl border border-slate-700
+                w-[95%] max-w-4xl h-[90vh] overflow-hidden shadow-2xl">
+
+        <!-- Close Button -->
+        <button
+            onclick="closeSurvey()"
+            class="absolute top-4 right-4 z-50
+                   bg-slate-800 hover:bg-slate-700
+                   text-white px-3 py-1 rounded-lg
+                   transition">
+            ✕
+        </button>
+
+        <!-- Google Form -->
+        <iframe
+            src="https://docs.google.com/forms/d/e/1FAIpQLSepLwLCqgR6sFjQV0doqDknWCWxNzvklK-dfo_njjkaFot9kg/viewform?embedded=true"
+            class="w-full h-full border-0">
+        </iframe>
+
+    </div>
+</div>
+
+<script>
+function closeSurvey() {
+
+    const modal = document.getElementById("surveyModal");
+
+    modal.classList.remove("flex");
+    modal.classList.add("hidden");
+}
+
+window.addEventListener("load", () => {
+
+    // Don't show again if already seen
+    if (localStorage.getItem("notesvault_survey_seen")) {
+        return;
+    }
+
+    // Show popup after 1 minute
+    setTimeout(() => {
+
+        const modal = document.getElementById("surveyModal");
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+
+        // Optional Analytics Event
+        if (typeof gtag !== "undefined") {
+            gtag('event', 'survey_popup_shown');
+        }
+
+        localStorage.setItem(
+            "notesvault_survey_seen",
+            "true"
+        );
+
+    }, 10000); // 10 seconds
+});
+</script>
+
 </body>
 </html>
