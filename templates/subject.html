@@ -186,7 +186,7 @@
                         <button data-sidebar-link onclick="handleNavClick('{{ unit }}', 'notes', this)" class="w-full text-left py-1.5 text-xs text-slate-500 hover:text-sky-400 transition flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span> Notes
                         </button>
-                        {% if subject_name != "Engineering Mathematics" and subject_name != "Design and Analysis" and subject_name != "Java" %}
+                        {% if subject_name != "Engineering Mathematics" %}
                         <button data-sidebar-link onclick="handleNavClick('{{ unit }}', 'ppt', this)" class="w-full text-left py-1.5 text-xs text-slate-500 hover:text-sky-400 transition flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span> Slides
                         </button>
@@ -208,7 +208,7 @@
 >
     <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
     {% if subject_name == "Computer Networks" %}
-        Sem End QB (only up to Module 3)
+        Sem End QB (All Modules)
     {% else %}
         Sem End QB
     {% endif %}
