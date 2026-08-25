@@ -28,7 +28,6 @@ check_sem4_data.py
 check_uploads.py
 cleanup_unit4_sections.py
 count_sections.py
-database.py
 db_setup.py
 delete_old.py
 delete_section.py
@@ -69,5 +68,7 @@ node_modules/
 Thumbs.db
 
 
-/rag
+
 /vector_db
+
+notes.db

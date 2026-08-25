@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, send_from_directory, session, url_for
 import os
-import sqlite3
+from database import get_db_connection
 from datetime import datetime
 from datetime import timedelta
 import uuid
@@ -55,15 +55,16 @@ def add_announcement():
     if "admin_logged_in" not in session:
         return redirect("/admin")
     if request.method == "POST":
-        conn = sqlite3.connect("notes.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
             INSERT INTO announcements (title, message)
-            VALUES (?, ?)
+            VALUES (%s, %s)
         """, (request.form["title"], request.form["message"]))
 
         conn.commit()
+        cursor.close()
         conn.close()
 
         return redirect("/admin/dashboard")
@@ -98,14 +99,14 @@ def add_topic():
         section_contents = request.form.getlist("section_content[]")
         section_images = request.files.getlist("section_image[]")
 
-        conn = sqlite3.connect("notes.db")
+        conn = get_db_connection()
         try:
             cursor = conn.cursor()
 
             # 1. Insert into notes table
             cursor.execute("""
                 INSERT INTO notes (semester, subject, unit, topic, content, definition, example, image_path)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (semester, subject, unit, title, summary, definition, example, image_path))
 
             topic_id = cursor.lastrowid
@@ -120,7 +121,7 @@ def add_topic():
 
                 cursor.execute("""
                     INSERT INTO topic_sections (topic_id, section_title, section_content, image_path, section_order)
-                    VALUES (?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s)
                 """, (topic_id, section_titles[i], section_contents[i], sec_img_path, i))
 
 # ... (Inside your add_topic try block, after inserting sections) ...
@@ -133,7 +134,7 @@ def add_topic():
                 if problems[i].strip():  # Only insert if problem text exists
                     cursor.execute("""
                         INSERT INTO problem_bank (topic_id, problem, solution, problem_order)
-                        VALUES (?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s)
                     """, (topic_id, problems[i], solutions[i], i))
 
             conn.commit()
@@ -147,7 +148,7 @@ def add_topic():
 
     # --- GET REQUEST LOGIC (Loading the form) ---
     # This only runs if the method is NOT POST
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT DISTINCT semester, subject FROM notes")
@@ -169,7 +170,7 @@ def add_topic():
 
 @app.route("/")
 def home():
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -185,7 +186,10 @@ def home():
 
     for title, message, created_at in announcements:
         if created_at:
-            utc_time = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+            if isinstance(created_at, str):
+                utc_time = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+            else:
+                utc_time = created_at
             ist_time = utc_time + timedelta(hours=5, minutes=30)
 
             created_at = ist_time.strftime("%d %b %Y, %I:%M %p")
@@ -200,10 +204,10 @@ def home():
 
 @app.route("/semester/<semester_name>")
 def semester(semester_name):
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT DISTINCT subject FROM notes WHERE semester=?", (semester_name,))
+    cursor.execute("SELECT DISTINCT subject FROM notes WHERE semester=%s", (semester_name,))
     subjects = cursor.fetchall()
 
 
@@ -216,15 +220,15 @@ def semester(semester_name):
 
 @app.route("/subject/<semester_name>/<subject_name>")
 def subject(semester_name, subject_name):
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # get all units
     cursor.execute("""
         SELECT DISTINCT unit
         FROM notes
-        WHERE semester=? AND subject=?
-        ORDER BY CAST(SUBSTR(unit, 6) AS INTEGER)
+        WHERE semester=%s AND subject=%s
+        ORDER BY CAST(SUBSTR(unit, 6) AS UNSIGNED)
     """, (semester_name, subject_name))
 
     units = [row[0] for row in cursor.fetchall()]
@@ -242,7 +246,7 @@ def subject(semester_name, subject_name):
         cursor.execute("""
             SELECT id, topic, content, definition, example
             FROM notes
-            WHERE semester=? AND subject=? AND unit=?
+            WHERE semester=%s AND subject=%s AND unit=%s
         """, (semester_name, subject_name, selected_unit))
 
         topics = cursor.fetchall()
@@ -259,13 +263,13 @@ def subject(semester_name, subject_name):
 
 @app.route("/unit_content/<semester>/<subject>/<unit>")
 def notes(semester, subject, unit):
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT id, topic, content, definition, example, image_path
         FROM notes
-        WHERE semester=? AND subject=? AND unit=?
+        WHERE semester=%s AND subject=%s AND unit=%s
         ORDER BY topic_order ASC
     """, (semester, subject, unit))
 
@@ -277,7 +281,7 @@ def notes(semester, subject, unit):
         cursor.execute("""
             SELECT section_title, section_content, image_path
             FROM topic_sections
-            WHERE topic_id=?
+            WHERE topic_id=%s
             ORDER BY section_order
         """, (topic[0],))
 
@@ -286,7 +290,7 @@ def notes(semester, subject, unit):
         cursor.execute("""
             SELECT problem, solution
             FROM problem_bank
-            WHERE topic_id=?
+            WHERE topic_id=%s
             ORDER BY problem_order
         """, (topic[0],))
 
@@ -314,12 +318,12 @@ def notes(semester, subject, unit):
 
 @app.route("/resource/<semester>/<subject>/<unit>/<rtype>")
 def load_resource(semester, subject, unit, rtype):
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT file_path FROM resources
-        WHERE semester=? AND subject=? AND unit=? AND type=?
+        WHERE semester=%s AND subject=%s AND unit=%s AND type=%s
     """, (semester, subject, unit, rtype))
 
     result = cursor.fetchone()
@@ -381,7 +385,7 @@ def load_resource(semester, subject, unit, rtype):
     else:
         base_url = request.host_url
         file_url = f"{base_url}uploads/{file_path}"
-        iframe_src = f"https://docs.google.com/gview?url={file_url}&embedded=true"
+        iframe_src = f"https://docs.google.com/gview%surl={file_url}&embedded=true"
 
     return f"""
     {fullscreen_style}
@@ -416,7 +420,7 @@ def upload_resource():
 
         # auto convert /view → /preview
         resource_link = resource_link.replace(
-            "/view?usp=sharing",
+            "/view%susp=sharing",
             "/preview"
         )
 
@@ -425,7 +429,7 @@ def upload_resource():
             "/preview"
         )
 
-        conn = sqlite3.connect("notes.db")
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -436,7 +440,7 @@ def upload_resource():
                 type,
                 file_path
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (
             semester,
             subject,
@@ -451,7 +455,7 @@ def upload_resource():
         return redirect("/admin/dashboard")
 
     # GET REQUEST
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -479,7 +483,7 @@ def upload_resource():
 def admin_topics():
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -497,11 +501,11 @@ def admin_topics():
 def delete_topic(topic_id):
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM topic_sections WHERE topic_id=?", (topic_id,))
-    cursor.execute("DELETE FROM notes WHERE id=?", (topic_id,))
+    cursor.execute("DELETE FROM topic_sections WHERE topic_id=%s", (topic_id,))
+    cursor.execute("DELETE FROM notes WHERE id=%s", (topic_id,))
 
     conn.commit()
     conn.close()
@@ -512,7 +516,7 @@ def delete_topic(topic_id):
 def edit_topic(topic_id):
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if request.method == "POST":
@@ -522,7 +526,7 @@ def edit_topic(topic_id):
         example = request.form["example"]
 
  
-        cursor.execute("SELECT image_path FROM notes WHERE id=?", (topic_id,))
+        cursor.execute("SELECT image_path FROM notes WHERE id=%s", (topic_id,))
         existing = cursor.fetchone()
         current_image = existing[0] if existing else ""
 
@@ -547,11 +551,11 @@ def edit_topic(topic_id):
 
         cursor.execute("""
             UPDATE notes
-            SET topic=?, content=?, definition=?, example=?, image_path=?
-            WHERE id=?
+            SET topic=%s, content=%s, definition=%s, example=%s, image_path=%s
+            WHERE id=%s
         """, (title, summary, definition, example, image_path, topic_id))
 
-        cursor.execute("DELETE FROM topic_sections WHERE topic_id=?", (topic_id,))
+        cursor.execute("DELETE FROM topic_sections WHERE topic_id=%s", (topic_id,))
 
         section_titles = request.form.getlist("section_title[]")
         section_contents = request.form.getlist("section_content[]")
@@ -569,7 +573,7 @@ def edit_topic(topic_id):
 
             cursor.execute("""
                 INSERT INTO topic_sections (topic_id, section_title, section_content, image_path, section_order)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             """, (topic_id, section_titles[i], section_contents[i], sec_img_path, i))
         
         # Update Problems
@@ -577,14 +581,14 @@ def edit_topic(topic_id):
         solutions = request.form.getlist("solution[]")
 
         # Clear existing problems for this topic
-        cursor.execute("DELETE FROM problem_bank WHERE topic_id=?", (topic_id,))
+        cursor.execute("DELETE FROM problem_bank WHERE topic_id=%s", (topic_id,))
 
         # Re-insert updated problems
         for i in range(len(problems)):
             if problems[i].strip():
                 cursor.execute("""
                     INSERT INTO problem_bank (topic_id, problem, solution, problem_order)
-                    VALUES (?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s)
                 """, (topic_id, problems[i], solutions[i], i))
 
         conn.commit()
@@ -595,14 +599,14 @@ def edit_topic(topic_id):
  
     cursor.execute("""
         SELECT topic, content, definition, example, image_path
-        FROM notes WHERE id=?
+        FROM notes WHERE id=%s
     """, (topic_id,))
     topic = cursor.fetchone()
 
     cursor.execute("""
         SELECT section_title, section_content, image_path
         FROM topic_sections
-        WHERE topic_id=?
+        WHERE topic_id=%s
         ORDER BY section_order
     """, (topic_id,))
     sections = cursor.fetchall()
@@ -610,7 +614,7 @@ def edit_topic(topic_id):
     cursor.execute("""
     SELECT problem, solution
     FROM problem_bank
-    WHERE topic_id=?
+    WHERE topic_id=%s
     ORDER BY problem_order
 """, (topic_id,))
 
@@ -627,7 +631,7 @@ def edit_topic(topic_id):
 def admin_announcements():
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -646,10 +650,10 @@ def admin_announcements():
 def delete_announcement(aid):
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM announcements WHERE id=?", (aid,))
+    cursor.execute("DELETE FROM announcements WHERE id=%s", (aid,))
 
     conn.commit()
     conn.close()
@@ -660,7 +664,7 @@ def delete_announcement(aid):
 def edit_announcement(aid):
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if request.method == "POST":
@@ -669,8 +673,8 @@ def edit_announcement(aid):
 
         cursor.execute("""
             UPDATE announcements
-            SET title=?, message=?
-            WHERE id=?
+            SET title=%s, message=%s
+            WHERE id=%s
         """, (title, message, aid))
 
         conn.commit()
@@ -679,7 +683,7 @@ def edit_announcement(aid):
         return redirect("/admin/announcements")
 
     cursor.execute("""
-        SELECT title, message FROM announcements WHERE id=?
+        SELECT title, message FROM announcements WHERE id=%s
     """, (aid,))
     announcement = cursor.fetchone()
 
@@ -699,13 +703,13 @@ def update_order():
         return redirect("/admin")
     data = request.get_json()
 
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     for item in data:
         cursor.execute("""
-            UPDATE notes SET topic_order=?
-            WHERE id=?
+            UPDATE notes SET topic_order=%s
+            WHERE id=%s
         """, (item["order"], item["id"]))
 
     conn.commit()
@@ -717,10 +721,10 @@ def update_order():
 def delete_resource(rid):
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT file_path FROM resources WHERE id=?", (rid,))
+    cursor.execute("SELECT file_path FROM resources WHERE id=%s", (rid,))
     result = cursor.fetchone()
 
     if result:
@@ -730,7 +734,7 @@ def delete_resource(rid):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-        cursor.execute("DELETE FROM resources WHERE id=?", (rid,))
+        cursor.execute("DELETE FROM resources WHERE id=%s", (rid,))
 
     conn.commit()
     conn.close()
@@ -740,7 +744,7 @@ def delete_resource(rid):
 def admin_resources():
     if "admin_logged_in" not in session:
         return redirect("/admin")
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -760,7 +764,7 @@ def search_suggestions():
     if not query:
         return {"results": []}
 
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Deep Scan Query: 
@@ -773,9 +777,9 @@ def search_suggestions():
             n.topic
         FROM notes n
         LEFT JOIN topic_sections ts ON n.id = ts.topic_id
-        WHERE LOWER(n.topic) LIKE ? 
-           OR LOWER(ts.section_title) LIKE ? 
-           OR LOWER(ts.section_content) LIKE ?
+        WHERE LOWER(n.topic) LIKE %s 
+           OR LOWER(ts.section_title) LIKE %s 
+           OR LOWER(ts.section_content) LIKE %s
         LIMIT 6
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
 
@@ -814,7 +818,7 @@ def submit_feedback():
     issue_type = request.form.get("issue_type")
     message = request.form.get("message")
 
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -824,7 +828,7 @@ def submit_feedback():
             issue_type,
             message
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (
         name,
         subject,
@@ -842,7 +846,7 @@ def admin_feedback():
     if "admin_logged_in" not in session:
         return redirect("/admin")
 
-    conn = sqlite3.connect("notes.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -860,42 +864,42 @@ def admin_feedback():
         feedbacks=feedbacks
     )
 
-# from flask import request, jsonify
-# from rag.chat import chat
+from flask import request, jsonify
+from rag.chat import chat
 
 
-# @app.route("/chat", methods=["POST"])
-# def ai_chat():
+@app.route("/chat", methods=["POST"])
+def ai_chat():
 
-#     try:
+    try:
 
-#         data = request.get_json()
+        data = request.get_json()
 
-#         print("\nREQUEST DATA:")
-#         print(data)
+        print("\nREQUEST DATA:")
+        print(data)
 
-#         user_message = data.get("message")
+        user_message = data.get("message")
 
-#         print("\nUSER MESSAGE:")
-#         print(user_message)
+        print("\nUSER MESSAGE:")
+        print(user_message)
 
-#         answer = chat(user_message)
+        answer = chat(user_message)
 
-#         print("\nAI ANSWER:")
-#         print(answer)
+        print("\nAI ANSWER:")
+        print(answer)
 
-#         return jsonify({
-#             "answer": answer
-#         })
+        return jsonify({
+            "answer": answer
+        })
 
-#     except Exception as e:
+    except Exception as e:
 
-#         print("\nCHAT ERROR:")
-#         print(str(e))
+        print("\nCHAT ERROR:")
+        print(str(e))
 
-#         return jsonify({
-#             "answer": f"Server Error: {str(e)}"
-#         })
+        return jsonify({
+            "answer": f"Server Error: {str(e)}"
+        })
 
 if __name__ == "__main__":
     app.run()
