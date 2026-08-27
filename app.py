@@ -34,7 +34,7 @@ def admin_login():
 
         return "<h3>Invalid credentials</h3>"
 
-    return render_template("admin_login.html")
+    return render_template("base.html")
 
 
 @app.route("/admin/dashboard")
@@ -42,7 +42,7 @@ def admin_dashboard():
     if "admin_logged_in" not in session:
         return redirect("/admin")
 
-    return render_template("admin_dashboard.html")
+    return render_template("base.html")
 
 @app.route("/admin/logout")
 def admin_logout():
@@ -69,7 +69,7 @@ def add_announcement():
 
         return redirect("/admin/dashboard")
 
-    return render_template("add_announcement.html")
+    return render_template("base.html")
 
 
 @app.route("/admin/add-topic", methods=["GET", "POST"])
@@ -162,7 +162,7 @@ def add_topic():
     finally:
         conn.close()
 
-    return render_template("add_topic.html",
+    return render_template("base.html",
                            semesters=semesters,
                            subjects=subjects,
                            units=units)
@@ -197,7 +197,7 @@ def home():
         formatted_announcements.append((title, message, created_at))
     conn.close()
 
-    return render_template("home.html",
+    return render_template("base.html",
                            semesters=semesters,
                            announcements=formatted_announcements)
 
@@ -213,7 +213,7 @@ def semester(semester_name):
 
     conn.close()
 
-    return render_template("semester.html",
+    return render_template("base.html",
                            semester_name=semester_name,
                            subjects=[row[0] for row in subjects])
 
@@ -253,7 +253,7 @@ def subject(semester_name, subject_name):
 
     conn.close()
 
-    return render_template("subject.html",
+    return render_template("base.html",
                            semester_name=semester_name,
                            subject_name=subject_name,
                            units=units,
@@ -309,7 +309,7 @@ def notes(semester, subject, unit):
 
     conn.close()
 
-    return render_template("notes.html",
+    return render_template("base.html",
                            semester_name=semester,
                            subject_name=subject,
                            unit_name=unit,
@@ -384,11 +384,11 @@ def load_resource(semester, subject, unit, rtype):
     if file_path.startswith("http"):
         iframe_src = file_path
     elif file_path.lower().endswith(".pdf"):
-        iframe_src = f"/uploads/{file_path}"
+        iframe_src = url_for("uploaded_file", filename=file_path)
     else:
         base_url = request.host_url
         file_url = f"{base_url}uploads/{file_path}"
-        iframe_src = f"https://docs.google.com/gview%surl={file_url}&embedded=true"
+        iframe_src = f"https://docs.google.com/gview?url={file_url}&embedded=true"
 
     return f"""
     {fullscreen_style}
@@ -476,7 +476,7 @@ def upload_resource():
     conn.close()
 
     return render_template(
-        "upload_resource.html",
+        "base.html",
         semesters=semesters,
         subjects=subjects,
         units=units
@@ -498,7 +498,7 @@ def admin_topics():
     topics = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_topics.html", topics=topics)
+    return render_template("base.html", topics=topics)
 
 @app.route("/admin/delete-topic/<int:topic_id>", methods=["POST"])
 def delete_topic(topic_id):
@@ -625,7 +625,7 @@ def edit_topic(topic_id):
 
     conn.close()
 
-    return render_template("edit_topic.html",
+    return render_template("base.html",
                            topic=topic,
                            sections=sections,
                            problems=problems,
@@ -646,7 +646,7 @@ def admin_announcements():
     announcements = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_announcements.html", announcements=announcements)
+    return render_template("base.html", announcements=announcements)
 
 
 @app.route("/admin/delete-announcement/<int:aid>", methods=["POST"])
@@ -692,7 +692,7 @@ def edit_announcement(aid):
 
     conn.close()
 
-    return render_template("edit_announcements.html",
+    return render_template("base.html",
                            announcement=announcement,
                            aid=aid)
 
@@ -758,7 +758,7 @@ def admin_resources():
     resources = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_resources.html", resources=resources)
+    return render_template("base.html", resources=resources)
 
 
 @app.route("/search_suggestions")
@@ -863,7 +863,7 @@ def admin_feedback():
     conn.close()
 
     return render_template(
-        "admin_feedback.html",
+        "base.html",
         feedbacks=feedbacks
     )
 

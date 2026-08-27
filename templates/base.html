@@ -3,14 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}NotesVault{% endblock %}</title>
+    <title>NotesVault{% if unit_name is defined %} | {{ unit_name }}{% elif subject_name is defined %} | {{ subject_name }}{% elif semester_name is defined %} | {{ semester_name }}{% endif %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
-    {% block head_extra %}{% endblock %}
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
-<body class="bg-slate-950 text-white {% block body_class %}{% endblock %}">
-    {% block content %}{% endblock %}
+<body class="min-h-screen bg-slate-950 text-white">
+    <nav class="border-b border-slate-800 bg-slate-900/90 px-6 py-4">
+        <div class="mx-auto flex max-w-6xl items-center justify-between">
+            <a href="/" class="text-xl font-extrabold">Notes<span class="text-sky-400">Vault</span></a>
+            <div class="flex gap-4 text-sm text-slate-400">
+                <a href="/" class="hover:text-white">Home</a>
+                <a href="/admin" class="hover:text-white">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mx-auto max-w-6xl px-6 py-12">
+        {% if unit_name is defined and content is defined %}
+        <a href="/subject/{{ subject_name }}/{{ unit_name }}" class="text-sm text-sky-400">Back to resources</a>
+        <h1 class="mt-6 text-4xl font-bold">{{ unit_name }}</h1>
+        <div class="mt-8 space-y-4">
+            {% for topic in content %}
+            <article class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+                <h2 class="text-xl font-bold text-sky-400">{{ topic.title }}</h2>
+                <p class="mt-3 whitespace-pre-line text-slate-300">{{ topic.summary }}</p>
+                {% if topic.definition %}<p class="mt-4 whitespace-pre-line text-slate-400">{{ topic.definition }}</p>{% endif %}
+                {% for section_title, section_content, image_path in topic.sections %}
+                <div class="mt-5 border-t border-slate-800 pt-4"><h3 class="font-semibold">{{ section_title }}</h3><p class="mt-2 whitespace-pre-line text-slate-400">{{ section_content }}</p></div>
+                {% endfor %}
+            </article>
+            {% else %}<p class="text-slate-400">No notes are available yet.</p>{% endfor %}
+        </div>
+        {% elif subject_name is defined and units is defined %}
+        <div class="flex gap-8">
+            <aside class="hidden w-56 shrink-0 rounded-2xl border border-slate-800 bg-slate-900 p-4 md:block">
+                <p class="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">Course menu</p>
+                <div class="space-y-2">{% for unit in units %}<a href="#unit-{{ loop.index }}" class="block rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-sky-400">{{ unit }}</a>{% endfor %}</div>
+            </aside>
+            <section class="min-w-0 flex-1">
+                <p class="text-sm uppercase tracking-widest text-sky-400">{{ semester_name }}</p>
+                <h1 class="mt-3 text-4xl font-bold">{{ subject_name }}</h1>
+                <div class="mt-8 grid gap-4 sm:grid-cols-2">
+                    {% for unit in units %}<article id="unit-{{ loop.index }}" class="rounded-2xl border border-slate-800 bg-slate-900 p-6"><h2 class="font-bold">{{ unit }}</h2><div class="mt-5 flex flex-wrap gap-2"><a href="{{ url_for('notes', semester=semester_name, subject=subject_name, unit=unit) }}" class="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold hover:bg-sky-500">Notes</a><a href="{{ url_for('load_resource', semester=semester_name, subject=subject_name, unit=unit, rtype='ppt') }}" class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-sky-500 hover:text-white">Slides</a><a href="{{ url_for('load_resource', semester=semester_name, subject=subject_name, unit=unit, rtype='qb') }}" class="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-sky-500 hover:text-white">Question Bank</a></div></article>{% else %}<p class="text-slate-400">No units are available yet.</p>{% endfor %}
+                </div>
+            </section>
+        </div>
+        {% elif semester_name is defined and subjects is defined %}
+        <p class="text-sm uppercase tracking-widest text-sky-400">Curriculum</p>
+        <h1 class="mt-3 text-4xl font-bold">{{ semester_name }}</h1>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for subject in subjects %}<a href="/subject/{{ semester_name }}/{{ subject }}" class="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-sky-500"><h2 class="font-bold">{{ subject }}</h2><p class="mt-2 text-sm text-slate-500">View subject resources</p></a>{% else %}<p class="text-slate-400">No subjects are available yet.</p>{% endfor %}
+        </div>
+        {% else %}
+        <section class="py-12">
+            <p class="text-sm font-bold uppercase tracking-[0.25em] text-sky-400">Academic resource hub</p>
+            <h1 class="mt-4 text-5xl font-extrabold leading-tight md:text-7xl">Study smarter.<br><span class="text-sky-400">Move forward.</span></h1>
+            <p class="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">Access semester-wise notes, presentations, question banks, and curated study material in one focused place.</p>
+            <h2 class="mt-16 text-3xl font-bold">Choose a semester</h2>
+            <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {% for semester in semesters|default([]) %}<a href="/semester/{{ semester }}" class="rounded-2xl border border-slate-800 bg-slate-900 p-6 hover:border-sky-500"><span class="text-sm font-bold text-sky-400">0{{ loop.index }}</span><h3 class="mt-10 text-xl font-bold">{{ semester }}</h3><p class="mt-2 text-sm text-slate-500">Notes, slides, and question banks</p></a>{% endfor %}
+            </div>
+            {% if announcements is defined and announcements %}<h2 class="mt-16 text-2xl font-bold">Latest announcements</h2><div class="mt-4 space-y-3">{% for title, message, created_at in announcements %}<div class="rounded-xl border border-slate-800 bg-slate-900 p-4"><strong>{{ title }}</strong><p class="mt-1 text-slate-400">{{ message }}</p></div>{% endfor %}</div>{% endif %}
+        </section>
+        {% endif %}
+    </main>
 </body>
 </html>
