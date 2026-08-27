@@ -329,11 +329,14 @@ def load_resource(semester, subject, unit, rtype):
     result = cursor.fetchone()
     conn.close()
 
-    if not result:
-        return "<div style='padding:40px; color:white;'><h2>will be  uploaded soon!!</h2></div>"
+    fallback_pdf = "Computer_Networks_Unit_1_qb.pdf"
+    file_path = result[0] if result and result[0] else fallback_pdf
 
-    file_path = result[0]
-    
+    if not result or not result[0]:
+        fallback_path = os.path.join(UPLOAD_FOLDER, fallback_pdf)
+        if not os.path.exists(fallback_path):
+            return "<div style='padding:40px; color:white;'><h2>will be uploaded soon!!</h2></div>"
+
     # CSS to make the container look perfect in fullscreen mode
     fullscreen_style = """
     <style>
