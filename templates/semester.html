@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ semester_name }} | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 
@@ -19,7 +21,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
-<body class="min-h-screen">
+{% block content %}
+<div class="min-h-screen">
 
     <nav class="w-full border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -217,5 +220,4 @@ window.addEventListener("load", () => {
     }, 10000); // 10 seconds
 });
 </script>
-</body>
-</html>
+{% endblock %}

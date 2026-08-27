@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +17,8 @@
         }
     </style>
 </head>
-<body class="text-white min-h-screen p-6 md:p-12">
+{% block content %}
+<div class="text-white min-h-screen p-6 md:p-12">
 
 <div class="max-w-6xl mx-auto">
     <!-- Top Navigation -->
@@ -109,5 +112,4 @@
     </div>
 </div>
 
-</body>
-</html>
+{% endblock %}

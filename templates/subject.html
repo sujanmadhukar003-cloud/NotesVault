@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ subject_name }} | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html class="scroll-smooth">
 <head>
@@ -21,8 +23,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
+{% block content %}
 
-<body class="h-screen flex flex-col">
+<div class="h-screen flex flex-col">
 
     <!-- Top Navigation Bar -->
     <nav class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50">
@@ -497,5 +500,4 @@ window.addEventListener("load", () => {
 });
 </script>
 
-</body>
-</html>
+{% endblock %}

@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Admin Login | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +17,8 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 flex items-center justify-center h-screen overflow-hidden relative">
+{% block content %}
+<div class="bg-slate-950 flex items-center justify-center h-screen overflow-hidden relative">
 
     <!-- Decorative Background Elements -->
     <div class="absolute top-0 left-0 w-full h-full -z-10">
@@ -79,5 +82,4 @@
         </p> -->
     </div>
 
-</body>
-</html>
+{% endblock %}

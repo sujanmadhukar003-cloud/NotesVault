@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}NotesVault | Study Smarter{% endblock %}
 <!DOCTYPE html>
 <html class="scroll-smooth">
 <head>
@@ -235,7 +237,8 @@
         }
     </style>
 </head>
-<body>
+{% block content %}
+<div>
 
     <nav class="fixed top-0 w-full z-50 glass-nav">
         <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center gap-4">
@@ -829,5 +832,4 @@ window.addEventListener("load", () => {
     }, 10000); // 10 seconds
 });
 </script>
-</body>
-</html>
+{% endblock %}

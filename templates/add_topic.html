@@ -1,10 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Add Topic | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Add Topic</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white p-10">
+{% block content %}
+<div class="bg-slate-900 text-white p-10">
 <h1 class="text-2xl font-bold mb-6">Add Topic</h1>
 
 <form method="POST" enctype="multipart/form-data" class="space-y-4 max-w-3xl">
@@ -149,5 +152,4 @@ function addProblem() {
 }
 </script>
 
-</body>
-</html>
+{% endblock %}

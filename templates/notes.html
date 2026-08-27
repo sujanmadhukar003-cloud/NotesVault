@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ subject_name }} | {{ unit_name }}{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,8 +23,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
+{% block content %}
 
-<body class="bg-slate-950 text-white min-h-screen p-6 md:p-10">
+<div class="bg-slate-950 text-white min-h-screen p-6 md:p-10">
 
 <div class="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -341,5 +344,4 @@ window.addEventListener("load", () => {
     }, 10000); // 10 seconds
 });
 </script>
-</body>
-</html>
+{% endblock %}

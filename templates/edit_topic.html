@@ -1,11 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Edit Topic | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Edit Topic</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+{% block content %}
 
-<body class="bg-slate-900 text-white p-10">
+<div class="bg-slate-900 text-white p-10">
 
 
 <div class="flex justify-between items-center mb-8">
@@ -291,5 +294,4 @@ function removeProblem(btn) {
 }
 </script>
 
-</body>
-</html>
+{% endblock %}

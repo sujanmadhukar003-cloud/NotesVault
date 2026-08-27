@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Upload Resource | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
+{% block content %}
 
-<body class="bg-slate-900 text-white p-10">
+<div class="bg-slate-900 text-white p-10">
 
 <h1 class="text-2xl font-bold mb-6">Add Resource</h1>
 
@@ -139,5 +142,4 @@ function filterUnits() {
 
 </script>
 
-</body>
-</html>
+{% endblock %}

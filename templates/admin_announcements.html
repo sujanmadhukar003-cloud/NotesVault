@@ -1,10 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Announcements | NotesVault{% endblock %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Manage Announcements</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white p-10">
+{% block content %}
+<div class="bg-slate-900 text-white p-10">
 <nav class="flex justify-between items-center py-4">
     <h1 class="text-2xl font-bold">Manage Announcements</h1>
     <a href="/admin/dashboard" class="bg-blue-600 px-3 py-1 rounded">Back to Admin</a>
@@ -44,5 +47,4 @@
     </tbody>
 </table>
 
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NotesVault{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    {% block head_extra %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
+</head>
+<body class="bg-slate-950 text-white {% block body_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+</body>
+</html>
